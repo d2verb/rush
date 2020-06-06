@@ -1,6 +1,6 @@
 type Arguments<'a> = Vec<&'a str>;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Command<'a> {
     Exit,
     Pwd,
@@ -24,5 +24,37 @@ impl<'a> Command<'a> {
             return None;
         }
         Some(Command::new(args))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Command;
+
+    #[test]
+    fn test_parse_command_type_correct() {
+        assert_eq!(Command::parse("exit").unwrap(), Command::Exit);
+        assert_eq!(Command::parse("pwd").unwrap(), Command::Pwd);
+        assert!(match Command::parse("cd ..").unwrap() {
+            Command::Cd(_) => true,
+            _ => false,
+        });
+        assert!(match Command::parse("ls ..").unwrap() {
+            Command::External(_) => true,
+            _ => false,
+        });
+    }
+
+    #[test]
+    fn test_parse_command_arguments_correct() {
+        let expected = vec!["echo", "a", "b", "c", "d", "efg"];
+        match Command::parse("echo a b c d efg").unwrap() {
+            Command::External(args) => {
+                for (i, arg) in args.iter().enumerate() {
+                    assert_eq!(arg, &expected[i]);
+                }
+            }
+            c => panic!(format!("unexpected command type: {:?}", c)),
+        }
     }
 }

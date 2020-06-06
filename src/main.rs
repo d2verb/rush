@@ -23,8 +23,7 @@ fn find_realpath(cmd_name: &str) -> String {
 }
 
 fn execve_wrapper(args: Vec<&str>) {
-    let path = find_realpath(&args[0]);
-    let cpath = CString::new(path).unwrap();
+    let path = CString::new(find_realpath(&args[0])).unwrap();
 
     let mut cargs = Vec::<CString>::new();
     for arg in args {
@@ -35,7 +34,7 @@ fn execve_wrapper(args: Vec<&str>) {
         .map(|(k, v)| CString::new(format!("{}={}", k, v)).unwrap())
         .collect();
 
-    execve(&cpath, &cargs[0..], &envs).expect(&format!("failed to execute {:?}", &cargs[0]));
+    execve(&path, &cargs[0..], &envs).expect(&format!("failed to execute {:?}", &cargs[0]));
 }
 
 fn execute(cmd: Command) {
@@ -81,5 +80,22 @@ fn main() {
                 break;
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::find_realpath;
+
+    #[test]
+    fn test_find_realpath() {
+        // found
+        assert_eq!(find_realpath("sh"), "/bin/sh");
+
+        // not found
+        assert_eq!(
+            find_realpath("b6f57b0a02ff43a72738a2e5be2f335690925d20cf4e89bd088d7677d7e94e99"),
+            "b6f57b0a02ff43a72738a2e5be2f335690925d20cf4e89bd088d7677d7e94e99"
+        );
     }
 }
