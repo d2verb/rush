@@ -44,7 +44,7 @@ fn execute(cmd: Command) {
         }
         Command::Cd(args) => match env::set_current_dir(&args[1]) {
             Ok(_) => {}
-            Err(err) => println!("failed to change directory to '{:?}': {:?}", &args[1], err),
+            Err(_) => println!("cd: no such directory: {}", &args[1]),
         },
         Command::Pwd => {
             let path = env::current_dir().unwrap();
