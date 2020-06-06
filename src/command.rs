@@ -1,9 +1,11 @@
+type Arguments<'a> = Vec<&'a str>;
+
 #[derive(Debug)]
 pub enum Command<'a> {
     Exit,
     Pwd,
-    Cd(Vec<&'a str>),
-    External(Vec<&'a str>),
+    Cd(Arguments<'a>),
+    External(Arguments<'a>),
 }
 
 impl<'a> Command<'a> {
