@@ -2,6 +2,7 @@ extern crate nix;
 
 use nix::sys::wait::*;
 use nix::unistd::*;
+use std::env;
 use std::ffi::CString;
 use std::io::{self, Write};
 
@@ -34,7 +35,13 @@ fn main() {
                 for arg in line.split_whitespace() {
                     argv.push(CString::new(arg).unwrap());
                 }
-                execv(&argv[0], &argv[1..]);
+
+                let envs: Vec<CString> = env::vars()
+                    .map(|(k, v)| CString::new(format!("{}={}", k, v)).unwrap())
+                    .collect();
+
+                execve(&argv[0], &argv[1..], &envs)
+                    .expect(format!("failed to execute command {:?}", argv[0]));
             }
         }
     }
