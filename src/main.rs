@@ -7,7 +7,7 @@ use std::env;
 use std::ffi::CString;
 use std::path::Path;
 
-fn find_cmd_path(cmd_name: &str) -> String {
+fn find_realpath(cmd_name: &str) -> String {
     match env::var_os("PATH") {
         Some(paths) => {
             for path in env::split_paths(&paths) {
@@ -23,7 +23,7 @@ fn find_cmd_path(cmd_name: &str) -> String {
 }
 
 fn execve_wrapper(args: Vec<&str>) {
-    let path = find_cmd_path(&args[0]);
+    let path = find_realpath(&args[0]);
     let cpath = CString::new(path).unwrap();
 
     let mut cargs = Vec::<CString>::new();
@@ -38,7 +38,7 @@ fn execve_wrapper(args: Vec<&str>) {
     execve(&cpath, &cargs[0..], &envs).expect(&format!("failed to execute {:?}", &cargs[0]));
 }
 
-fn exec_cmd(cmd: Command) {
+fn execute(cmd: Command) {
     match cmd {
         Command::Exit => {
             std::process::exit(0);
@@ -72,7 +72,7 @@ fn main() {
                     Some(cmd) => cmd,
                     None => continue,
                 };
-                exec_cmd(cmd);
+                execute(cmd);
             }
             Err(ReadlineError::Interrupted) => break,
             Err(ReadlineError::Eof) => break,
