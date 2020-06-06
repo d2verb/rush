@@ -1,31 +1,11 @@
 use nix::sys::wait::*;
 use nix::unistd::*;
+use rush::command::*;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 use std::env;
 use std::ffi::CString;
 use std::path::Path;
-
-#[derive(Debug, PartialEq, Eq)]
-enum CommandKind {
-    Exit,
-    Cd,
-    Pwd,
-    External,
-    None,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-struct Command {
-    kind: CommandKind,
-    args: Option<Vec<String>>,
-}
-
-impl Command {
-    fn new(kind: CommandKind, args: Option<Vec<String>>) -> Self {
-        Command { kind, args }
-    }
-}
 
 fn get_cmd(line: String) -> Command {
     let args: Vec<String> = line.split_whitespace().map(|s| s.to_string()).collect();
