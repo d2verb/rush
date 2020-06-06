@@ -1,3 +1,8 @@
+extern crate nix;
+
+use nix::sys::wait::*;
+use nix::unistd::*;
+use std::ffi::CString;
 use std::io::{self, Write};
 
 fn prompt(prefix: &str) -> std::io::Result<String> {
@@ -19,6 +24,18 @@ fn main() {
                 break;
             }
         };
-        println!("Your input is {}", line);
+
+        match fork().expect("fork failed") {
+            ForkResult::Parent { child } => {
+                let _ = waitpid(child, None);
+            }
+            ForkResult::Child => {
+                let mut argv = Vec::<CString>::new();
+                for arg in line.split_whitespace() {
+                    argv.push(CString::new(arg).unwrap());
+                }
+                execv(&argv[0], &argv[1..]);
+            }
+        }
     }
 }
