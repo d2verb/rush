@@ -1,14 +1,14 @@
 #[derive(Debug)]
-pub enum Command {
+pub enum Command<'a> {
     Exit,
     Pwd,
-    Cd(Vec<String>),
-    External(Vec<String>),
+    Cd(Vec<&'a str>),
+    External(Vec<&'a str>),
 }
 
-impl Command {
-    pub fn new(args: Vec<String>) -> Self {
-        match args[0].as_str() {
+impl<'a> Command<'a> {
+    fn new(args: Vec<&'a str>) -> Self {
+        match args[0] {
             "exit" => Command::Exit,
             "pwd" => Command::Pwd,
             "cd" => Command::Cd(args),
@@ -16,8 +16,8 @@ impl Command {
         }
     }
 
-    pub fn parse(s: &str) -> Option<Self> {
-        let args: Vec<String> = s.split_whitespace().map(|s| s.to_string()).collect();
+    pub fn parse(s: &'a str) -> Option<Self> {
+        let args: Vec<&str> = s.split_whitespace().collect();
         if args.len() < 1 {
             return None;
         }

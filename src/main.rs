@@ -22,7 +22,7 @@ fn find_cmd_path(cmd_name: &str) -> String {
     }
 }
 
-fn execve_wrapper(args: Vec<String>) {
+fn execve_wrapper(args: Vec<&str>) {
     let path = find_cmd_path(&args[0]);
     let cpath = CString::new(path).unwrap();
 
