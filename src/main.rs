@@ -7,22 +7,6 @@ use std::env;
 use std::ffi::CString;
 use std::path::Path;
 
-fn get_cmd(line: String) -> Command {
-    let args: Vec<String> = line.split_whitespace().map(|s| s.to_string()).collect();
-
-    if args.len() < 1 {
-        return Command::new(CommandKind::None, None);
-    }
-
-    let kind: CommandKind = match args[0].as_str() {
-        "exit" => CommandKind::Exit,
-        "cd" => CommandKind::Cd,
-        "pwd" => CommandKind::Pwd,
-        _ => CommandKind::External,
-    };
-    Command::new(kind, Some(args))
-}
-
 fn find_cmd_path(cmd_name: &str) -> String {
     match env::var_os("PATH") {
         Some(paths) => {
@@ -55,28 +39,24 @@ fn execve_wrapper(args: Vec<String>) {
 }
 
 fn exec_cmd(cmd: Command) {
-    match cmd.kind {
-        CommandKind::Exit => {
+    match cmd {
+        Command::Exit => {
             std::process::exit(0);
         }
-        CommandKind::Cd => {
-            let args = cmd.args.unwrap();
-            match env::set_current_dir(&args[1]) {
-                Ok(_) => {}
-                Err(err) => println!("failed to change directory to '{:?}': {:?}", &args[1], err),
-            }
-        }
-        CommandKind::Pwd => {
+        Command::Cd(args) => match env::set_current_dir(&args[1]) {
+            Ok(_) => {}
+            Err(err) => println!("failed to change directory to '{:?}': {:?}", &args[1], err),
+        },
+        Command::Pwd => {
             let path = env::current_dir().unwrap();
             println!("{}", path.display());
         }
-        CommandKind::External => match fork().expect("fork failed") {
+        Command::External(args) => match fork().expect("fork failed") {
             ForkResult::Parent { child } => {
                 let _ = waitpid(child, None);
             }
-            ForkResult::Child => execve_wrapper(cmd.args.unwrap()),
+            ForkResult::Child => execve_wrapper(args),
         },
-        CommandKind::None => {}
     }
 }
 
@@ -88,7 +68,10 @@ fn main() {
         let line = rl.readline("$ ");
         match line {
             Ok(line) => {
-                let cmd = get_cmd(line);
+                let cmd = match Command::parse(&line) {
+                    Some(cmd) => cmd,
+                    None => continue,
+                };
                 exec_cmd(cmd);
             }
             Err(ReadlineError::Interrupted) => break,

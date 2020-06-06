@@ -1,36 +1,26 @@
-#[derive(Debug, PartialEq, Eq)]
-pub enum CommandKind {
+#[derive(Debug)]
+pub enum Command {
     Exit,
-    Cd,
     Pwd,
-    External,
-    None,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct Command {
-    pub kind: CommandKind,
-    pub args: Option<Vec<String>>,
+    Cd(Vec<String>),
+    External(Vec<String>),
 }
 
 impl Command {
-    pub fn new(kind: CommandKind, args: Option<Vec<String>>) -> Self {
-        Command { kind, args }
-    }
-}
-
-pub fn get_cmd(line: String) -> Command {
-    let args: Vec<String> = line.split_whitespace().map(|s| s.to_string()).collect();
-
-    if args.len() < 1 {
-        return Command::new(CommandKind::None, None);
+    pub fn new(args: Vec<String>) -> Self {
+        match args[0].as_str() {
+            "exit" => Command::Exit,
+            "pwd" => Command::Pwd,
+            "cd" => Command::Cd(args),
+            _ => Command::External(args),
+        }
     }
 
-    let kind: CommandKind = match args[0].as_str() {
-        "exit" => CommandKind::Exit,
-        "cd" => CommandKind::Cd,
-        "pwd" => CommandKind::Pwd,
-        _ => CommandKind::External,
-    };
-    Command::new(kind, Some(args))
+    pub fn parse(s: &str) -> Option<Self> {
+        let args: Vec<String> = s.split_whitespace().map(|s| s.to_string()).collect();
+        if args.len() < 1 {
+            return None;
+        }
+        Some(Command::new(args))
+    }
 }
