@@ -7,6 +7,14 @@ use std::env;
 use std::ffi::CString;
 use std::path::Path;
 
+/// Find real path of given command.
+///
+/// # Examples
+///
+/// ```rust
+/// let path = find_realpath("sh");
+/// assert_eq!(&path, "/bin/sh");
+/// ```
 fn find_realpath(cmd_name: &str) -> String {
     match env::var_os("PATH") {
         Some(paths) => {
