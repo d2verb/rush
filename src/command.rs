@@ -27,9 +27,25 @@ impl<'a> Command<'a> {
     }
 }
 
+pub struct PipedCommand<'a> {
+    pub cmds: Vec<Command<'a>>,
+}
+
+impl<'a> PipedCommand<'a> {
+    pub fn parse(s: &'a str) -> Option<Self> {
+        let mut cmds = Vec::<Command>::new();
+        for cmd_str in s.split('|').collect::<Vec<&str>>() {
+            let cmd = Command::parse(cmd_str)?;
+            cmds.push(cmd);
+        }
+        Some(Self { cmds })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::Command;
+    use super::PipedCommand;
 
     #[test]
     fn test_parse_command_type_correct() {
@@ -55,6 +71,28 @@ mod tests {
                 }
             }
             c => panic!(format!("unexpected command type: {:?}", c)),
+        }
+    }
+
+    #[test]
+    fn test_parse_piped_command_correct_without_pipe() {
+        match PipedCommand::parse("exit").unwrap() {
+            PipedCommand { cmds } => {
+                assert_eq!(cmds.len(), 1);
+                assert_eq!(cmds[0], Command::Exit);
+            }
+        }
+    }
+
+    #[test]
+    fn test_parse_piped_command_correct_with_pipes() {
+        match PipedCommand::parse("pwd | pwd | exit").unwrap() {
+            PipedCommand { cmds } => {
+                assert_eq!(cmds.len(), 3);
+                assert_eq!(cmds[0], Command::Pwd);
+                assert_eq!(cmds[1], Command::Pwd);
+                assert_eq!(cmds[2], Command::Exit);
+            }
         }
     }
 }
