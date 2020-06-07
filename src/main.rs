@@ -1,5 +1,6 @@
 use nix::sys::wait::*;
 use nix::unistd::*;
+use rush::builtin;
 use rush::command::*;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
@@ -47,17 +48,9 @@ fn execve_wrapper(args: Vec<&str>) {
 
 fn execute(cmd: Command) {
     match cmd {
-        Command::Exit => {
-            std::process::exit(0);
-        }
-        Command::Cd(args) => match env::set_current_dir(&args[1]) {
-            Ok(_) => {}
-            Err(_) => println!("cd: no such directory: {}", &args[1]),
-        },
-        Command::Pwd => {
-            let path = env::current_dir().unwrap();
-            println!("{}", path.display());
-        }
+        Command::Exit => builtin::exit(),
+        Command::Cd(args) => builtin::cd(&args),
+        Command::Pwd => builtin::pwd(),
         Command::External(args) => match fork().expect("fork failed") {
             ForkResult::Parent { child } => {
                 let _ = waitpid(child, None);
